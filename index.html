@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Divinu's Lanchonete - Cardápio</title>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0b0f19;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 15px;
+  color: #f7fafc;
+}
+
+.container {
+  background-color: #121824;
+  padding: 22px;
+  border-radius: 20px;
+  position: relative;
+  max-width: 480px;
+  width: 100%;
+  margin: auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,.6);
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+
+  background: linear-gradient(
+    45deg,
+    #e100ff,
+    #ff007f,
+    #ff7b00,
+    #ffcc00
+  );
+
+  border-radius: 23px;
+  z-index: -1;
+}
+
+.brand-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.brand-logo-area {
+  background-color: #800000;
+  width: 75px;
+  height: 75px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border: 3px solid #ffcc00;
+  font-size: 30px;
+
+  box-shadow: 0 0 20px rgba(255,204,0,.25);
+}
+
+.brand-header h1 {
+  margin: 0;
+  color: #ffcc00;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.brand-header p {
+  margin: 3px 0 0;
+  color: white;
+  font-size: 11px;
+  letter-spacing: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  opacity: .8;
+}
+
+h2 {
+  margin: 28px 0 12px;
+  font-size: 16px;
+  color: #ffcc00;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #800000;
+  padding-bottom: 7px;
+}
+
+.obs-tag {
+  background: linear-gradient(90deg,#800000,#a00000);
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #b30000;
+}
+
+.product-card {
+  background: linear-gradient(145deg,#1e293b,#172033);
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 15px;
+  margin-bottom: 13px;
+  transition: .25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card.selected {
+  border-color: #ffcc00;
+
+  box-shadow:
+    0 0 15px rgba(255,204,0,.12);
+}
+
+.product-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-title {
+  display: block;
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.product-desc {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.product-price {
+  color: #ffcc00;
+  font-weight: 900;
+  font-size: 15px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.btn-customize {
+  background-color: #0b0f19;
+  color: #ffcc00;
+  border: 1px solid #ffcc00;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+.btn-customize.active {
+  background-color: #ffcc00;
+  color: #0b0f19;
+}
+
+input[type="text"],
+textarea {
+
+  width: 100%;
+
+  padding: 13px;
+
+  border: 1px solid #334155;
+
+  border-radius: 9px;
+
+  margin-bottom: 10px;
+
+  font-size: 14px;
+
+  background-color: #0b0f19;
+
+  color: white;
+
+  outline: none;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #ffcc00;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+
+/* ================================
+   FORMA DE PAGAMENTO
+================================ */
+
+.payment-box {
+
+  background: linear-gradient(
+    145deg,
+    #1e293b,
+    #172033
+  );
+
+  border: 1px solid #334155;
+
+  border-radius: 14px;
+
+  padding: 15px;
+
+  margin-top: 20px;
+}
+
+.payment-title {
+
+  color: #ffcc00;
+
+  font-size: 16px;
+
+  font-weight: 900;
+
+  margin-bottom: 12px;
+}
+
+.payment-option {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  background: #0b0f19;
+
+  border: 1px solid #334155;
+
+  padding: 13px;
+
+  border-radius: 9px;
+
+  margin-bottom: 9px;
+
+  cursor: pointer;
+
+  transition: .2s;
+}
+
+.payment-option:hover {
+
+  border-color: #ffcc00;
+
+}
+
+.payment-option.selected {
+
+  border-color: #ffcc00;
+
+  background: #261f0b;
+
+}
+
+.payment-option input {
+
+  accent-color: #ffcc00;
+
+  width: 18px;
+
+  height: 18px;
+}
+
+.payment-icon {
+
+  font-size: 20px;
+}
+
+.payment-text {
+
+  font-size: 13px;
+
+  font-weight: bold;
+}
+
+.payment-description {
+
+  display: block;
+
+  font-size: 10px;
+
+  color: #94a3b8;
+
+  margin-top: 3px;
+}
+
+
+/* ================================
+   TOTAL
+================================ */
+
+.total-box {
+
+  background: linear-gradient(
+    90deg,
+    #800000,
+    #650000
+  );
+
+  border: 1px solid #ffcc00;
+
+  padding: 16px;
+
+  border-radius: 11px;
+
+  margin: 20px 0;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+}
+
+.total-value {
+
+  color: #ffcc00;
+
+  font-size: 24px;
+
+  font-weight: 900;
+}
+
+
+/* ================================
+   BOTÃO FINALIZAR
+================================ */
+
+.btn-pay {
+
+  background: linear-gradient(
+    90deg,
+    #ffcc00,
+    #ff7b00
+  );
+
+  color: #0b0f19;
+
+  border: none;
+
+  padding: 16px;
+
+  border-radius: 11px;
+
+  font-weight: 900;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+  width: 100%;
+
+  text-transform: uppercase;
+}
+
+.btn-pay:disabled {
+
+  opacity: .6;
+
+  cursor: not-allowed;
+}
+
+
+/* ================================
+   PIX
+================================ */
+
+.pix-modal {
+
+  display: none;
+
+  background: #1e293b;
+
+  border: 2px solid #ffcc00;
+
+  border-radius: 12px;
+
+  padding: 18px;
+
+  margin-top: 20px;
+
+  text-align: center;
+}
+
+.qrcode-img {
+
+  width: 200px;
+
+  height: 200px;
+
+  margin: 12px auto;
+
+  background: white;
+
+  border-radius: 8px;
+
+  padding: 8px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  color: black;
+
+  font-weight: bold;
+}
+
+.qrcode-img img {
+
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: contain;
+}
+
+.btn-copy {
+
+  background-color: #ffcc00;
+
+  color: #0b0f19;
+
+  border: none;
+
+  padding: 9px 15px;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+
+  font-weight: bold;
+
+  margin-top: 10px;
+}
+
+.status-pagamento {
+
+  margin-top: 18px;
+
+  padding: 12px;
+
+  border-radius: 9px;
+
+  background: #0b0f19;
+
+  color: #ffcc00;
+
+  font-weight: bold;
+
+  font-size: 13px;
+}
+
+
+/* ================================
+   RESUMO
+================================ */
+
+.resumo-pedido {
+
+  display: none;
+
+  background: #0b0f19;
+
+  border: 1px solid #334155;
+
+  border-radius: 10px;
+
+  padding: 14px;
+
+  margin-top: 15px;
+
+  font-size: 13px;
+}
+
+.resumo-pedido strong {
+
+  color: #ffcc00;
+}
+
+.confirmado {
+
+  color: #22c55e !important;
+}
+
+.erro {
+
+  color: #ef4444 !important;
+}
+
+@media(max-width:400px) {
+
+  .container {
+    padding: 17px;
+  }
+
+  .product-title {
+    font-size: 14px;
+  }
+
+  .product-desc {
+    font-size: 11px;
+  }
+
+  .product-price {
+    font-size: 14px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="brand-header">
+
+<div class="brand-logo-area">
+👨‍🍳
+</div>
+
+<h1>DIVINU'S</h1>
+
+<p>Lanchonete</p>
+
+</div>
+
+
+<h2>🥞 Cuscuz Recheado</h2>
+
+<div class="obs-tag">
+🥬 OBS: TODOS OS CUSCUZ ACOMPANHAM VERDURA
+</div>
+
+
+<!-- PRODUTOS -->
+
+<div class="product-card"
+data-name="Cuscuz com Carne de Sol">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🥩 Cuscuz com Carne de Sol
+</span>
+
+<div class="product-desc">
+Cuscuz, carne de sol, catupiry e queijo mussarela maçaricado.
+</div>
+
+<button class="btn-customize"
+onclick="toggleCart('Cuscuz com Carne de Sol',13,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 13,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card"
+data-name="Cuscuz com Carne na Nata">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🥩 Cuscuz com Carne na Nata
+</span>
+
+<div class="product-desc">
+Cuscuz, carne de sol na nata e queijo coalho assado.
+</div>
+
+<button class="btn-customize"
+onclick="toggleCart('Cuscuz com Carne na Nata',13,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 13,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card"
+data-name="Cuscuz com Frango Desfiado">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🍗 Cuscuz com Frango Desfiado
+</span>
+
+<div class="product-desc">
+Cuscuz, frango desfiado, catupiry e queijo mussarela maçaricado.
+</div>
+
+<button class="btn-customize"
+onclick="toggleCart('Cuscuz com Frango Desfiado',13,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 13,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card"
+data-name="Cuscuz com Frango Cremoso">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🍗 Cuscuz com Frango Cremoso
+</span>
+
+<div class="product-desc">
+Cuscuz, frango cremoso e queijo mussarela maçaricado.
+</div>
+
+<button class="btn-customize"
+onclick="toggleCart('Cuscuz com Frango Cremoso',13,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 13,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card"
+data-name="Cuscuz com Ovo">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🍳 Cuscuz com Ovo
+</span>
+
+<div class="product-desc">
+Cuscuz, ovo frito e queijo mussarela maçaricado.
+</div>
+
+<button class="btn-customize"
+onclick="toggleCart('Cuscuz com Ovo',8,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 8,00
+</div>
+
+</div>
+</div>
+
+
+<h2>🍟 Acompanhamentos</h2>
+
+
+<div class="product-card"
+data-name="Porção de Batata Frita">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🍟 Porção de Batata Frita
+</span>
+
+<div class="product-desc">
+Porção de batata frita crocante.
+</div>
+
+<button class="btn-customize"
+onclick="toggleCart('Porção de Batata Frita',10.99,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 10,99
+</div>
+
+</div>
+</div>
+
+
+<h2>🥤 Bebidas</h2>
+
+
+<div class="product-card">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🥤 Vitamina de Açaí
+</span>
+
+<div class="product-desc">
+Vitamina cremosa de açaí.
+</div>
+
+<button class="btn-customize"
+onclick="toggleCart('Vitamina de Açaí',13,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 13,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🥤 Refrigerante 1 Litro
+</span>
+
+<button class="btn-customize"
+onclick="toggleCart('Refri 1 Litro',10,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 10,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🥤 Refrigerante Lata
+</span>
+
+<button class="btn-customize"
+onclick="toggleCart('Refri Lata',7,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 7,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🍊 Suco de Laranja
+</span>
+
+<button class="btn-customize"
+onclick="toggleCart('Suco de Laranja',7,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 7,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🧃 Suco
+</span>
+
+<button class="btn-customize"
+onclick="toggleCart('Suco',6,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 6,00
+</div>
+
+</div>
+</div>
+
+
+<div class="product-card">
+
+<div class="product-main">
+
+<div class="product-info">
+
+<span class="product-title">
+🥤 Refri Mini
+</span>
+
+<button class="btn-customize"
+onclick="toggleCart('Refri Mini',5,this)">
+
+🛒 Adicionar ao Pedido
+
+</button>
+
+</div>
+
+<div class="product-price">
+R$ 5,00
+</div>
+
+</div>
+</div>
+
+
+<!-- DADOS -->
+
+<h2>📍 Dados de Entrega</h2>
+
+<input
+type="text"
+id="clientName"
+placeholder="Seu Nome Completo">
+
+<input
+type="text"
+id="clientAddress"
+placeholder="Endereço de Entrega (Rua, Número, Bairro)">
+
+<textarea
+id="orderObs"
+placeholder="Alguma observação? Ex: sem cebola, trocar catupiry..."></textarea>
+
+
+<!-- PAGAMENTO -->
+
+<div class="payment-box">
+
+<div class="payment-title">
+💳 Forma de Pagamento
+</div>
+
+
+<label class="payment-option">
+
+<input
+type="radio"
+name="paymentMethod"
+value="pix"
+onchange="selecionarPagamento(this)">
+
+<div class="payment-icon">
+💠
+</div>
+
+<div>
+
+<div class="payment-text">
+Pix
+</div>
+
+<span class="payment-description">
+QR Code ou código Pix
+</span>
+
+</div>
+
+</label>
+
+
+<label class="payment-option">
+
+<input
+type="radio"
+name="paymentMethod"
+value="debito"
+onchange="selecionarPagamento(this)">
+
+<div class="payment-icon">
+💳
+</div>
+
+<div>
+
+<div class="payment-text">
+Cartão de Débito
+</div>
+
+<span class="payment-description">
+Pagamento com cartão de débito
+</span>
+
+</div>
+
+</label>
+
+
+<label class="payment-option">
+
+<input
+type="radio"
+name="paymentMethod"
+value="credito"
+onchange="selecionarPagamento(this)">
+
+<div class="payment-icon">
+💳
+</div>
+
+<div>
+
+<div class="payment-text">
+Cartão de Crédito
+</div>
+
+<span class="payment-description">
+Pagamento com cartão de crédito
+</span>
+
+</div>
+
+</label>
+
+
+<label class="payment-option">
+
+<input
+type="radio"
+name="paymentMethod"
+value="entrega"
+onchange="selecionarPagamento(this)">
+
+<div class="payment-icon">
+🚚
+</div>
+
+<div>
+
+<div class="payment-text">
+Pagamento na Entrega
+</div>
+
+<span class="payment-description">
+Pague quando o pedido chegar
+</span>
+
+</div>
+
+</label>
+
+</div>
+
+
+<!-- TOTAL -->
+
+<div class="total-box">
+
+<span style="font-weight:bold;">
+Total do Pedido:
+</span>
+
+<span
+class="total-value"
+id="totalValueDisplay">
+
+R$ 0,00
+
+</span>
+
+</div>
+
+
+<!-- RESUMO -->
+
+<div
+class="resumo-pedido"
+id="resumoPedido">
+
+<strong>Resumo:</strong>
+
+<div id="resumoItens"></div>
+
+<br>
+
+<strong>Pagamento:</strong>
+
+<div id="resumoPagamento">
+Não selecionado
+</div>
+
+</div>
+
+
+<!-- FINALIZAR -->
+
+<button
+class="btn-pay"
+id="btnFinalizar"
+onclick="finalizarPedido()">
+
+🛒 FINALIZAR PEDIDO
+
+</button>
+
+
+<!-- PIX -->
+
+<div
+class="pix-modal"
+id="pixModal">
+
+<h3 style="color:#ffcc00;">
+Pagamento via Pix
+</h3>
+
+<p style="font-size:13px;color:#94a3b8;">
+
+Escaneie o QR Code ou copie o código Pix.
+
+</p>
+
+
+<div
+class="qrcode-img"
+id="qrCodeContainer">
+
+QR CODE PIX
+
+</div>
+
+
+<input
+type="text"
+id="pixCodeInput"
+readonly
+value="">
+
+
+<button
+class="btn-copy"
+onclick="copyPixCode()">
+
+📋 Copiar Código Pix
+
+</button>
+
+
+<div
+class="status-pagamento"
+id="statusPagamento">
+
+🕒 Aguardando confirmação do pagamento...
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* ==========================================
+   CONFIGURAÇÕES
+========================================== */
+
+let cart = [];
+
+let totalAmount = 0;
+
+let formaPagamento = null;
+
+let numeroPedidoAtual = null;
+
+
+/* ==========================================
+   ADICIONAR / REMOVER PRODUTO
+========================================== */
+
+function toggleCart(name, price, button) {
+
+  const card =
+    button.closest('.product-card');
+
+  const index =
+    cart.findIndex(
+      item => item.name === name
+    );
+
+
+  if(index > -1) {
+
+    cart.splice(index,1);
+
+    button.innerHTML =
+      "🛒 Adicionar ao Pedido";
+
+    button.classList.remove('active');
+
+    card.classList.remove('selected');
+
+  }
+
+  else {
+
+    cart.push({
+      name:name,
+      price:Number(price)
+    });
+
+    button.innerHTML =
+      "✅ Item Adicionado";
+
+    button.classList.add('active');
+
+    card.classList.add('selected');
+
+  }
+
+  updateTotal();
+
+  atualizarResumo();
+
+}
+
+
+/* ==========================================
+   ATUALIZAR TOTAL
+========================================== */
+
+function updateTotal() {
+
+  totalAmount =
+    cart.reduce(
+      (sum,item) =>
+        sum + Number(item.price),
+      0
+    );
+
+
+  document
+    .getElementById('totalValueDisplay')
+    .innerText =
+      `R$ ${totalAmount
+        .toFixed(2)
+        .replace('.',',')}`;
+
+}
+
+
+/* ==========================================
+   ESCOLHER PAGAMENTO
+========================================== */
+
+function selecionarPagamento(input) {
+
+  formaPagamento = input.value;
+
+
+  document
+    .querySelectorAll('.payment-option')
+    .forEach(option => {
+
+      option.classList.remove(
+        'selected'
+      );
+
+    });
+
+
+  input
+    .closest('.payment-option')
+    .classList.add('selected');
+
+
+  const nomes = {
+
+    pix:
+      "💠 Pix",
+
+    debito:
+      "💳 Cartão de Débito",
+
+    credito:
+      "💳 Cartão de Crédito",
+
+    entrega:
+      "🚚 Pagamento na Entrega"
+
+  };
+
+
+  document
+    .getElementById('resumoPagamento')
+    .innerText =
+      nomes[formaPagamento];
+
+
+  atualizarResumo();
+
+}
+
+
+/* ==========================================
+   RESUMO DO PEDIDO
+========================================== */
+
+function atualizarResumo() {
+
+  const resumo =
+    document.getElementById(
+      'resumoPedido'
+    );
+
+
+  const itens =
+    document.getElementById(
+      'resumoItens'
+    );
+
+
+  if(cart.length === 0) {
+
+    resumo.style.display = 'none';
+
+    return;
+
+  }
+
+
+  resumo.style.display = 'block';
+
+
+  itens.innerHTML =
+    cart.map(item => {
+
+      return `
+        <div>
+          ${item.name}
+          —
+          R$ ${Number(item.price)
+            .toFixed(2)
+            .replace('.',',')}
+        </div>
+      `;
+
+    }).join('');
+
+}
+
+
+/* ==========================================
+   FINALIZAR PEDIDO
+========================================== */
+
+async function finalizarPedido() {
+
+  const name =
+    document
+      .getElementById('clientName')
+      .value
+      .trim();
+
+
+  const address =
+    document
+      .getElementById('clientAddress')
+      .value
+      .trim();
+
+
+  const obs =
+    document
+      .getElementById('orderObs')
+      .value
+      .trim();
+
+
+  /* PRODUTOS */
+
+  if(cart.length === 0) {
+
+    alert(
+      "Adicione pelo menos um item ao pedido."
+    );
+
+    return;
+
+  }
+
+
+  /* CLIENTE */
+
+  if(!name || !address) {
+
+    alert(
+      "Preencha seu nome e endereço."
+    );
+
+    return;
+
+  }
+
+
+  /* PAGAMENTO */
+
+  if(!formaPagamento) {
+
+    alert(
+      "Escolha uma forma de pagamento."
+    );
+
+    return;
+
+  }
+
+
+  const botao =
+    document.getElementById(
+      'btnFinalizar'
+    );
+
+
+  botao.disabled = true;
+
+  botao.innerText =
+    "⏳ ENVIANDO PEDIDO...";
+
+
+  const nomesPagamento = {
+
+    pix:
+      "Pix",
+
+    debito:
+      "Cartão de Débito",
+
+    credito:
+      "Cartão de Crédito",
+
+    entrega:
+      "Pagamento na Entrega"
+
+  };
+
+
+  /* ==========================================
+     DADOS DO PEDIDO
+  ========================================== */
+
+  const dadosCarrinho = {
+
+    cliente: {
+
+      nome:name,
+
+      endereco:address,
+
+      observacao:obs
+
+    },
+
+
+    itens:
+
+      cart.map(item => ({
+
+        nome:item.name,
+
+        preco:Number(item.price)
+
+      })),
+
+
+    total:
+
+      Number(
+        totalAmount.toFixed(2)
+      ),
+
+
+    pagamento: {
+
+      tipo:
+        formaPagamento,
+
+      descricao:
+        nomesPagamento[
+          formaPagamento
+        ]
+
+    }
+
+  };
+
+
+  try {
+
+    const resposta =
+      await fetch(
+        '/api/pedidos',
+        {
+
+          method:'POST',
+
+          headers: {
+
+            'Content-Type':
+              'application/json'
+
+          },
+
+          body:
+            JSON.stringify(
+              dadosCarrinho
+            )
+
+        }
+      );
+
+
+    if(!resposta.ok) {
+
+      throw new Error(
+        'Erro ao enviar pedido.'
+      );
+
+    }
+
+
+    const resultado =
+      await resposta.json();
+
+
+    if(!resultado.success) {
+
+      throw new Error(
+        resultado.message ||
+        'Não foi possível criar o pedido.'
+      );
+
+    }
+
+
+    numeroPedidoAtual =
+      resultado.numeroPedido;
+
+
+    /* ==========================================
+       PIX
+    ========================================== */
+
+    if(formaPagamento === 'pix') {
+
+      document
+        .getElementById(
+          'pixModal'
+        )
+        .style.display =
+          'block';
+
+
+      let qrCodeHTML = '';
+
+
+      if(resultado.qrCode) {
+
+        qrCodeHTML = `
+
+          <img
+            src="${resultado.qrCode}"
+            alt="QR Code Pix">
+
+        `;
+
+      }
+
+      else {
+
+        qrCodeHTML = `
+
+          <div style="
+            color:#111;
+            text-align:center;
+            padding:20px;
+          ">
+
+            QR CODE PIX
+
+            <br><br>
+
+            Aguardando geração
+
+          </div>
+
+        `;
+
+      }
+
+
+      document
+        .getElementById(
+          'qrCodeContainer'
+        )
+        .innerHTML =
+          qrCodeHTML;
+
+
+      if(resultado.pixCode) {
+
+        document
+          .getElementById(
+            'pixCodeInput'
+          )
+          .value =
+            resultado.pixCode;
+
+      }
+
+    }
+
+
+    /* ==========================================
+       PAGAMENTO NA ENTREGA
+    ========================================== */
+
+    if(formaPagamento === 'entrega') {
+
+      alert(
+        `Pedido #${numeroPedidoAtual} enviado!\n\nPagamento será realizado na entrega.`
+      );
+
+    }
+
+
+    /* ==========================================
+       CARTÃO
+    ========================================== */
+
+    if(
+      formaPagamento === 'debito' ||
+      formaPagamento === 'credito'
+    ) {
+
+      alert(
+        `Pedido #${numeroPedidoAtual} enviado!\n\nPagamento: ${nomesPagamento[formaPagamento]}.\nO pagamento será realizado conforme a forma disponível pela lanchonete.`
+      );
+
+    }
+
+
+    botao.innerText =
+      `✅ PEDIDO #${numeroPedidoAtual}`;
+
+
+  }
+
+  catch(erro) {
+
+    console.error(erro);
+
+
+    alert(
+      erro.message ||
+      'Erro ao enviar o pedido.'
+    );
+
+
+    botao.disabled = false;
+
+    botao.innerText =
+      "🛒 FINALIZAR PEDIDO";
+
+  }
+
+}
+
+
+/* ==========================================
+   COPIAR PIX
+========================================== */
+
+function copyPixCode() {
+
+  const campo =
+    document.getElementById(
+      'pixCodeInput'
+    );
+
+
+  if(!campo.value) {
+
+    alert(
+      "O código Pix ainda não está disponível."
+    );
+
+    return;
+
+  }
+
+
+  navigator.clipboard
+    .writeText(campo.value)
+    .then(() => {
+
+      alert(
+        "Código Pix copiado!"
+      );
+
+    })
+
+    .catch(() => {
+
+      campo.select();
+
+      document.execCommand(
+        'copy'
+      );
+
+      alert(
+        "Código Pix copiado!"
+      );
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>
